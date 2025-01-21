@@ -32,7 +32,8 @@ def calculate_spark_config(total_nodes, cores_per_node, ram_per_node, executor_c
     memory_with_overhead = int(memory_per_executor * (1 - (memory_overhead_percentage / 100)))
     # Calculate memory overhead based on executor memory
     # The formula appears to be approximately: overhead = executor_memory_in_gb * 102.4 (rounded to nearest MB)
-    memory_overhead = int(memory_with_overhead * 102.4)
+    # 1024 (1 GB i.e. 1024 MB) * 0.1 (10 % overhead) = 102.4
+    memory_overhead = int(memory_with_overhead * 1024 * (memory_overhead_percentage / 100))
 
     # SPARK-DEFAULTS.CONF
     spark_defaults = {
@@ -48,6 +49,22 @@ def calculate_spark_config(total_nodes, cores_per_node, ram_per_node, executor_c
         'spark.dynamicAllocation.enabled': False,
         'spark.sql.adaptive.enabled': True
     }
+
+    # Recommended Configuration
+    # This can help in running the applications smoothly to avoid timeout and memory-related errors.
+    recommended_config = {
+        'spark.memory.fraction': 0.8,  # Fraction of JVM heap space used for execution and storage
+        'spark.scheduler.barrier.maxConcurrentTasksCheck.maxFailures': 5,
+        'spark.rdd.compress': True,  # Compress RDD partitions
+        'spark.shuffle.compress': True,  # Compress map output files
+        'spark.shuffle.spill.compress': True,  # Compress data spilled during shuffles
+        'spark.serializer': 'org.apache.spark.serializer.KryoSerializer',  # Use Kryo serializer
+        'spark.executor.extraJavaOptions': '-XX:+UseG1GC -XX:+G1SummarizeConcMark',
+        'spark.driver.extraJavaOptions': '-XX:+UseG1GC -XX:+G1SummarizeConcMark'
+    }
+
+    # Combine with spark defaults
+    spark_defaults.update(recommended_config)
 
     print("\n=====SPARK-DEFAULTS.CONF=====")
     for key, value in spark_defaults.items():
