@@ -3,7 +3,8 @@ def calculate_spark_config(total_nodes, cores_per_node, ram_per_node, executor_c
                            parallelism_per_core=2, memory_overhead_percentage=10,
                            deployment_mode="Cluster"):
     print(f"Total Nodes: {total_nodes} (1 Master node + {total_nodes - 1} Worker nodes)")
-    print(f"--executor-cores {executor_cores}")
+    print(f"Driver Cores: {executor_cores}")
+    print(f"Executor Cores: {executor_cores}")
 
     # System reservations
     yarn_cores = 1  # Yarn Daemon, 1 core per node
